@@ -1,0 +1,24 @@
+name: VickyEs-Party_and_Friends_Addon
+version: '0.0.1-MIKA'
+main: org.vicky.vicky.VickyEsPnA
+api-version: '1.20'
+prefix: Vs-PnA-A
+load: STARTUP
+authors: [ VickyE2 ]
+softdepend:
+  - ItemsAdder
+depend:
+  - Vicky-s_Utilities
+  - PartyAndFriends
+description: An addon for more functionality to Parties and Friends
+permissions:
+  vfa.admin:
+    description: Allows access to all VickyE's Friends Addon
+    default: op
+commands:
+  open_fgui:
+    description: "Open Main Friend Gui"
+    usage: "/<command>"
+    aliases: [ofgui, open_friend_gui]
+    permission: vfa.admin
+    permission-message: "You have no friends..."
