@@ -3,8 +3,8 @@ package org.vicky.vicky.utils;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.configurate.ConfigurationNode;
-import org.v_utls.utilities.ANSIColor;
-import org.v_utls.utilities.ConfigManager;
+import org.vicky.utilities.ANSIColor;
+import org.vicky.utilities.ConfigManager;
 
 import javax.imageio.ImageIO;
 import java.awt.*;

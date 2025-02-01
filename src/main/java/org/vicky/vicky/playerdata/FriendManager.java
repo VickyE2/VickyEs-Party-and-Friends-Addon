@@ -4,7 +4,7 @@ import de.simonsator.partyandfriends.api.pafplayers.PAFPlayer;
 import de.simonsator.partyandfriends.api.pafplayers.PAFPlayerManager;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.v_utls.utilities.JsonConfigManager;
+import org.vicky.utilities.JsonConfigManager;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -74,7 +74,8 @@ public class FriendManager {
             JsonConfigManager manager = new JsonConfigManager(plugin);
             manager.createConfigAsync("Users/" + playerUUID + "/friends.json")
                     .thenCompose(v -> manager.loadConfigValuesAsync()) // Ensure config is loaded
-                    .thenCompose(v -> manager.setConfigValueAsync("friends." + nextId + ".uuid", friendUUID)) // Set value after load
+                    .thenCompose(v -> manager.setConfigValueAsync("friends." + nextId + ".uuid", friendUUID))
+                    .thenAccept(v -> plugin.getLogger().info("Added friend: " + manager.getStringValue("friends." + nextId) + " id: " + nextId))// Set value after load
                     .thenRun(manager::saveConfigAsync) // Save config after setting the friend
                     .exceptionally(ex -> {
                         plugin.getLogger().severe("Failed to add friend: " + ex.getMessage());

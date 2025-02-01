@@ -4,8 +4,8 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.spongepowered.configurate.ConfigurationNode;
-import org.v_utls.utilities.JsonConfigManager;
-import org.v_utls.utilities.XmlConfigManager;
+import org.vicky.utilities.JsonConfigManager;
+import org.vicky.utilities.XmlConfigManager;
 import org.vicky.vicky.global.Utils;
 import org.w3c.dom.NodeList;
 

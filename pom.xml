@@ -91,7 +91,7 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.example.vicky_utils</groupId>
+            <groupId>org.vicky.vicky_utils</groupId>
             <artifactId>v-utls</artifactId>
             <version>0.0.1-BETA</version>
             <scope>provided</scope>

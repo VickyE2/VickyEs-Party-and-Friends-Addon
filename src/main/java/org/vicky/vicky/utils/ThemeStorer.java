@@ -2,7 +2,7 @@ package org.vicky.vicky.utils;
 
 import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.v_utls.utilities.XmlConfigManager;
+import org.vicky.utilities.XmlConfigManager;
 
 import java.util.HashMap;
 import java.util.Map;

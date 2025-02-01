@@ -2,14 +2,11 @@ package org.vicky.vicky.utils;
 
 import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.v_utls.utilities.XmlConfigManager;
-
+import org.vicky.utilities.XmlConfigManager;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
-
 public class RegisteredPlayersManager {
-
     private final JavaPlugin plugin;
 
     public RegisteredPlayersManager(JavaPlugin plugin){
