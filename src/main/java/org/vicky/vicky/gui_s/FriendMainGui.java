@@ -1,32 +1,29 @@
 package org.vicky.vicky.gui_s;
 
-import dev.lone.LoneLibs.S;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.vicky.guiparent.BaseGui;
 import org.vicky.guiparent.GuiCreator;
+import org.vicky.utilities.DatabaseManager.templates.DatabasePlayer;
 import org.vicky.utilities.RanksLister;
 import org.vicky.vicky.listeners.FriendsMainListener;
-import org.vicky.vicky.messages.MessageManager;
-import org.vicky.vicky.playerdata.FriendManager;
-import org.vicky.vicky.playerdata.PlayerSettingsGenerator;
-import org.vicky.vicky.utils.FriendsListSorter;
-import org.vicky.vicky.utils.ThemeStorer;
+import org.vicky.vicky.utilities.DBTemplates.FriendPlayer;
+import org.vicky.vicky.utilities.database.dao_s.FriendDAO;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static org.vicky.global.Global.databaseManager;
+import static org.vicky.global.Global.storer;
 import static org.vicky.vicky.global.Listeners.mainFriendsListener;
 
 public class FriendMainGui extends BaseGui {
 
     private final GuiCreator guiManager;
-    private final ThemeStorer storer;
     private FriendsMainListener listener;
     private final JavaPlugin plugin;
 
@@ -37,7 +34,6 @@ public class FriendMainGui extends BaseGui {
 
         // Initialize other fields
         this.guiManager = new GuiCreator(plugin, mainFriendsListener);
-        this.storer = new ThemeStorer(plugin);
 
     }
 
@@ -79,102 +75,111 @@ public class FriendMainGui extends BaseGui {
     @Override
     public void showGui(Player player) {
 
-        PlayerSettingsGenerator settingsGenerator = new PlayerSettingsGenerator(plugin, player);
-        FriendsListSorter sorter = new FriendsListSorter(plugin);
+        FriendPlayer FPlayer = new FriendDAO().getFriendById(player.getUniqueId().toString());
         HashMap<String, GuiCreator.ItemConfig> Items = new HashMap<>();
-
 
         boolean iaEnabled = Bukkit.getServer().getPluginManager().getPlugin("ItemsAdder") != null;
 
         if (iaEnabled) {
             String SortingName;
-            String theme_id = "";
-            String sorttype = settingsGenerator.getConfigValue(player, "Settings.SortingStyle").toString();
-            if (storer.isRegisteredTheme(settingsGenerator.getConfigValue(player, "Settings.Theme").toString())) {
-                theme_id = storer.getThemeID(settingsGenerator.getConfigValue(player, "Settings.Theme").toString());
+            String theme_id;
+            String sortType = FPlayer.getSortingStyle().toString();
+            if (storer.isRegisteredTheme(FPlayer.getUserTheme())) {
+                theme_id = storer.getThemeID(FPlayer.getUserTheme());
             } else {
-                plugin.getLogger().severe("Player " + player.getName() + " has an enabled theme: " + storer.isRegisteredTheme(settingsGenerator.getConfigValue(player, "Settings.Themes").toString()) + " which dosent exist");
+                plugin.getLogger().severe("Player " + player.getName() + " has an enabled theme: " + storer.isRegisteredTheme(FPlayer.getUserTheme()) + " which dosent exist");
                 theme_id = "lt";
             }
 
-            if (Objects.equals(sorttype, "by_date_ascending")) {
+            if (Objects.equals(sortType, "by_date_ascending")) {
                 SortingName = "ʙʏ ᴅᴀᴛᴇ <ᴀsᴄᴇɴᴅɪɴɢ>";
-            } else if (Objects.equals(sorttype, "by_date_descending")) {
+            } else if (Objects.equals(sortType, "by_date_descending")) {
                 SortingName = "ʙʏ ᴅᴀᴛᴇ <ᴅᴇsᴄᴇɴᴅɪɴɢ>";
-            } else if (Objects.equals(sorttype, "by_name_ascending")) {
+            } else if (Objects.equals(sortType, "by_name_ascending")) {
                 SortingName = "ʙʏ ɴᴀᴍᴇ <ᴀsᴄᴇɴᴅɪɴɢ>";
-            } else if (Objects.equals(sorttype, "by_name_descending")) {
+            } else if (Objects.equals(sortType, "by_name_descending")) {
                 SortingName = "ʙʏ ɴᴀᴍᴇ <ᴅᴇsᴄᴇɴᴅɪɴɢ>";
-            } else if (Objects.equals(sorttype, "by_last_online_ascending")) {
+            } else if (Objects.equals(sortType, "by_last_online_ascending")) {
                 SortingName = "ʙʏ ʟᴀsᴛ ᴏɴʟɪɴᴇ <ᴀsᴄᴇɴᴅɪɴɢ>";
-            } else if (Objects.equals(sorttype, "by_last_online_descending")) {
+            } else if (Objects.equals(sortType, "by_last_online_descending")) {
                 SortingName = "ʙʏ ʟᴀsᴛ ᴏɴʟɪɴᴇ <ᴅᴇsᴄᴇɴᴅɪɴɢ>";
             } else {
                 SortingName = "";
             }
 
-            String finalTheme_id = theme_id;
-            Bukkit.getScheduler().runTask(plugin, () -> sorter.sortList(player, sorttype)
-                    .thenAccept(friend -> {
-                        if (friend == null) {
-                            plugin.getLogger().warning("Received null friends list from sorter");
-                            return;
-                        }
+            String finalTheme_id = theme_id;Bukkit.getScheduler().runTask(plugin, () ->
+                    FPlayer.getFriendsAsync()
+                            .thenAccept(friendUUIDs -> {
+                                if (friendUUIDs == null) {
+                                    plugin.getLogger().warning("Received null friends list from sorter");
+                                    return;
+                                }
 
-                        if (friend.isEmpty()) {
-                            plugin.getLogger().info("Friends list is empty");
-                            return;
-                        }
+                                if (friendUUIDs.isEmpty()) {
+                                    plugin.getLogger().info("Friends list is empty");
+                                    return;
+                                }
 
-                        List<GuiCreator.ItemConfig> friendConfigs = new ArrayList<>(Arrays.asList(
-                                PLAYER_1, PLAYER_2, PLAYER_3, PLAYER_4, PLAYER_5, PLAYER_6, PLAYER_7,
-                                PLAYER_8, PLAYER_9, PLAYER_10, PLAYER_11, PLAYER_12, PLAYER_13,
-                                PLAYER_14, PLAYER_15, PLAYER_16, PLAYER_17, PLAYER_18, PLAYER_19, PLAYER_20, PLAYER_21
-                        ));
+                                List<GuiCreator.ItemConfig> friendConfigs = new ArrayList<>(Arrays.asList(
+                                        PLAYER_1, PLAYER_2, PLAYER_3, PLAYER_4, PLAYER_5, PLAYER_6, PLAYER_7,
+                                        PLAYER_8, PLAYER_9, PLAYER_10, PLAYER_11, PLAYER_12, PLAYER_13,
+                                        PLAYER_14, PLAYER_15, PLAYER_16, PLAYER_17, PLAYER_18, PLAYER_19, PLAYER_20, PLAYER_21
+                                ));
 
-                        // Create a sublist for the first 21 friends or fewer if the list is smaller
-                        List<UUID> handleFriends = friend.size() > 21 ? friend.subList(0, 21) : new ArrayList<>(friend);
-
-                        // Create friend item configs asynchronously
-                        createFriendItemConfigs(handleFriends, friendConfigs).thenAccept(friendItems -> {
-                            if (!friendItems.isEmpty()) {
-                                for (int i = 0; i < friendItems.size(); i++) {
-                                    if (friendItems.get(i) != null) {
-                                        plugin.getLogger().info("Added friend: " + friendItems.get(i).getName() + " with lore: " + friendItems.get(i).getLore());
-                                        Items.put("PLAYER_" + (i + 1), friendItems.get(i));
+                                List<UUID> handleFriends = new ArrayList<>();
+                                int index = 0;
+                                for (FriendPlayer friendPlayer : friendUUIDs) {
+                                    if (index <= 21) {
+                                        handleFriends.add(friendPlayer.getId());
+                                        index += 1;
+                                    }else {
+                                        break;
                                     }
                                 }
-                            }
 
-                            // You may want to trigger GUI updates here as well
-                        }).exceptionally(ex -> {
-                            plugin.getLogger().severe("Error creating friend item configs: " + ex.getMessage());
-                            ex.printStackTrace();
-                            return null;
-                        });
-                    })
-                    .thenRun(() ->
-                            Bukkit.getScheduler().runTask(plugin, () -> proceed(player, SortingName, finalTheme_id, Items))
-                    )
-                    .exceptionally(ex -> {
-                        plugin.getLogger().severe("Error sorting friends: " + ex.getMessage());
-                        ex.printStackTrace();
-                        return null;
-                    }));
+                                // Asynchronously create GUI item configurations, including party information
+                                createFriendItemConfigs(handleFriends, friendConfigs)
+                                        .thenAccept(friendItems -> {
+                                            if (!friendItems.isEmpty()) {
+                                                for (int i = 0; i < friendItems.size(); i++) {
+                                                    GuiCreator.ItemConfig config = friendItems.get(i);
+                                                    if (config != null) {
+                                                        plugin.getLogger().info("Added friend: " + config.getName() + " with lore: " + config.getLore());
+                                                        Items.put("PLAYER_" + (i + 1), config);
+                                                    }
+                                                }
+                                            }
+                                        })
+                                        .exceptionally(ex -> {
+                                            plugin.getLogger().severe("Error creating friend item configs: " + ex.getMessage());
+                                            ex.printStackTrace();
+                                            return null;
+                                        });
+                            })
+                            .thenRun(() ->
+                                    Bukkit.getScheduler().runTask(plugin, () ->
+                                            proceed(player, SortingName, finalTheme_id, Items)
+                                    )
+                            )
+                            .exceptionally(ex -> {
+                                plugin.getLogger().severe("Error sorting friends: " + ex.getMessage());
+                                ex.printStackTrace();
+                                return null;
+                            })
+            );
+
 
         }
 
     }
 
     public void proceed(Player player, String SortingName, String theme_id, HashMap<String, GuiCreator.ItemConfig> Items) {
-        PlayerSettingsGenerator settingsGenerator = new PlayerSettingsGenerator(plugin, player);
-        FriendsListSorter sorter = new FriendsListSorter(plugin);
+        FriendPlayer FPlayer = new FriendDAO().getFriendById(player.getUniqueId().toString());
         RanksLister lister = new RanksLister();
-        MessageManager messageManager = new MessageManager(plugin);
 
 
         boolean iaEnabled = Bukkit.getServer().getPluginManager().getPlugin("ItemsAdder") != null;
-        boolean hasFriendRequest = sorter.hasFriendRequest(player);
+        boolean hasFriendRequest = FPlayer.getFriendRequests();
 
         if (iaEnabled) {
             List<String> lore = new ArrayList<>();
@@ -240,7 +245,7 @@ public class FriendMainGui extends BaseGui {
 
             headLore.add("");
             headLore.add(ChatColor.RESET + "ʏᴏᴜʀ sᴛᴀᴛᴜs");
-            headLore.add(ChatColor.YELLOW + "→ " + ChatColor.AQUA + settingsGenerator.getConfigValue(player, "Settings.Status"));
+            headLore.add(ChatColor.YELLOW + "→ " + ChatColor.AQUA + FPlayer.getStatus());
 
             IAPLAYERHEAD = new GuiCreator.ItemConfig(
                     null,
@@ -273,7 +278,7 @@ public class FriendMainGui extends BaseGui {
             Items.put("IAFRIENDREQUEST", IAFRIENDREQUEST);
 
             String requestM;
-            if (messageManager.hasValidMessageRequest(player)) {
+            if (FPlayer.hasMessages()) {
                 requestM = " message_request_has_" + theme_id;
             } else {
                 requestM = "message_request_empty_" + theme_id;
@@ -302,7 +307,7 @@ public class FriendMainGui extends BaseGui {
 
             Items.put("IASETTINGS", IASETTINGS);
 
-            if (sorter.isInParty(player)) {
+            if (FPlayer.isInParty()) {
                 IAPARTYBUTTON_1 = new GuiCreator.ItemConfig(
                         null,
                         ChatColor.GREEN + "ᴘᴀʀᴛʏ",

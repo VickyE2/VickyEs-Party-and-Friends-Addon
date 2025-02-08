@@ -113,11 +113,13 @@
             <artifactId>junit</artifactId>
             <version>4.13.2</version>
         </dependency>
+        <!--
         <dependency>
             <groupId>de.simonsator</groupId>
             <artifactId>DevelopmentPAFSpigot</artifactId>
             <version>1.0.239</version>
             <scope>provided</scope>
         </dependency>
+        -->
     </dependencies>
 </project>

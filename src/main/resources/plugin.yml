@@ -3,13 +3,11 @@ version: '0.0.1-MIKA'
 main: org.vicky.vicky.VickyEsPnA
 api-version: '1.20'
 prefix: Vs-PnA-A
-load: STARTUP
 authors: [ VickyE2 ]
-softdepend:
+soft-depend:
   - ItemsAdder
 depend:
   - Vicky-s_Utilities
-  - PartyAndFriends
 description: An addon for more functionality to Parties and Friends
 permissions:
   vfa.admin:
