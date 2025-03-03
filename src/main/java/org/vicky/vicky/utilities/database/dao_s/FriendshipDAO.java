@@ -5,6 +5,7 @@ import jakarta.persistence.TypedQuery;
 import org.vicky.utilities.DatabaseManager.HibernateUtil;
 import org.vicky.vicky.utilities.DBTemplates.FriendPlayer;
 import org.vicky.vicky.utilities.DBTemplates.Friendship;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -12,33 +13,54 @@ public class FriendshipDAO {
 
     public Optional<Friendship> getById(Long id) {
         EntityManager em = HibernateUtil.getEntityManager();
-        Friendship friendship = em.find(Friendship.class, id);
-        em.close();
-        return Optional.ofNullable(friendship);
+        try {
+            Friendship friendship = em.find(Friendship.class, id);
+            return Optional.ofNullable(friendship);
+        } finally {
+            em.close();
+        }
     }
 
     public List<Friendship> getAll() {
         EntityManager em = HibernateUtil.getEntityManager();
-        TypedQuery<Friendship> query = em.createQuery("SELECT f FROM Friendship f", Friendship.class);
-        List<Friendship> friendships = query.getResultList();
-        em.close();
-        return friendships;
+        try {
+            TypedQuery<Friendship> query = em.createQuery("SELECT f FROM Friendship f", Friendship.class);
+            return query.getResultList();
+        } finally {
+            em.close();
+        }
     }
 
     public void save(Friendship friendship) {
         EntityManager em = HibernateUtil.getEntityManager();
-        em.getTransaction().begin();
-        em.persist(friendship);
-        em.getTransaction().commit();
-        em.close();
+        try {
+            em.getTransaction().begin();
+            em.persist(friendship);
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            throw e;
+        } finally {
+            em.close();
+        }
     }
 
     public void delete(Friendship friendship) {
         EntityManager em = HibernateUtil.getEntityManager();
-        em.getTransaction().begin();
-        em.remove(em.contains(friendship) ? friendship : em.merge(friendship));
-        em.getTransaction().commit();
-        em.close();
+        try {
+            em.getTransaction().begin();
+            em.remove(em.contains(friendship) ? friendship : em.merge(friendship));
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            throw e;
+        } finally {
+            em.close();
+        }
     }
 
     public void delete(FriendPlayer friendA, FriendPlayer friendB) {
@@ -46,17 +68,21 @@ public class FriendshipDAO {
         try {
             em.getTransaction().begin();
             TypedQuery<Friendship> query = em.createQuery(
-                    "SELECT f FROM Friendship f WHERE (f.friendA = :friendA AND f.friendB = :friendB) " +
-                            "OR (f.friendA = :friendB AND f.friendB = :friendA)", Friendship.class);
-            query.setParameter("playerAId", friendA.getId().toString());
-            query.setParameter("playerBId", friendB.getId().toString());
+                    "SELECT f FROM Friendship f WHERE (f.friendA.id = :friendAId AND f.friendB.id = :friendBId) " +
+                            "OR (f.friendA.id = :friendBId AND f.friendB.id = :friendAId)", Friendship.class);
+            query.setParameter("friendAId", friendA.getId().toString());
+            query.setParameter("friendBId", friendB.getId().toString());
             Friendship friendship = query.getSingleResult();
             if (friendship != null) {
                 em.remove(friendship);
-                em.getTransaction().commit();
             }
-        }
-        finally {
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()){
+                em.getTransaction().rollback();
+            }
+            throw e;
+        } finally {
             em.close();
         }
     }
@@ -64,34 +90,31 @@ public class FriendshipDAO {
     public Friendship of(FriendPlayer friendA, FriendPlayer friendB) {
         EntityManager em = HibernateUtil.getEntityManager();
         try {
-            em.getTransaction().begin();
             TypedQuery<Friendship> query = em.createQuery(
-                    "SELECT f FROM Friendship f WHERE (f.friendA = :friendA AND f.friendB = :friendB) " +
-                            "OR (f.friendA = :friendB AND f.friendB = :friendA)", Friendship.class);
-            query.setParameter("playerAId", friendA.getId().toString());
-            query.setParameter("playerBId", friendB.getId().toString());
-            Friendship friendship = query.getSingleResult();
-            if (friendship != null) {
-                return friendship;
-            }
-        }
-        finally {
+                    "SELECT f FROM Friendship f WHERE (f.friendA.id = :friendAId AND f.friendB.id = :friendBId) " +
+                            "OR (f.friendA.id = :friendBId AND f.friendB.id = :friendAId)", Friendship.class);
+            query.setParameter("friendAId", friendA.getId().toString());
+            query.setParameter("friendBId", friendB.getId().toString());
+            return query.getSingleResult();
+        } catch (Exception e) {
+            // Return null if no result or any exception occurs
+            return null;
+        } finally {
             em.close();
         }
-
-        return null;
     }
 
     public List<Friendship> getFriendshipsOfPlayer(Long playerId) {
         EntityManager em = HibernateUtil.getEntityManager();
-        TypedQuery<Friendship> query = em.createQuery(
-                "SELECT f FROM Friendship f WHERE f.friendA.id = :playerId OR f.friendB.id = :playerId",
-                Friendship.class
-        );
-        query.setParameter("playerId", playerId);
-        List<Friendship> friendships = query.getResultList();
-        em.close();
-        return friendships;
+        try {
+            TypedQuery<Friendship> query = em.createQuery(
+                    "SELECT f FROM Friendship f WHERE f.friendA.id = :playerId OR f.friendB.id = :playerId",
+                    Friendship.class
+            );
+            query.setParameter("playerId", playerId);
+            return query.getResultList();
+        } finally {
+            em.close();
+        }
     }
 }
-

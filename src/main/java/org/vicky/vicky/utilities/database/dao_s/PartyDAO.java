@@ -15,6 +15,11 @@ public class PartyDAO {
             em.getTransaction().begin();
             em.persist(party);
             em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()){
+                em.getTransaction().rollback();
+            }
+            throw e;
         } finally {
             em.close();
         }
@@ -31,6 +36,11 @@ public class PartyDAO {
                 em.merge(party);
             }
             em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()){
+                em.getTransaction().rollback();
+            }
+            throw e;
         } finally {
             em.close();
         }
@@ -47,6 +57,11 @@ public class PartyDAO {
                 em.merge(party);
             }
             em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()){
+                em.getTransaction().rollback();
+            }
+            throw e;
         } finally {
             em.close();
         }
@@ -60,6 +75,7 @@ public class PartyDAO {
             em.close();
         }
     }
+
     public void deleteParty(Long partyId) {
         EntityManager em = HibernateUtil.getEntityManager();
         try {
@@ -76,7 +92,7 @@ public class PartyDAO {
             if (em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
             }
-            throw ex;  // Consider handling or logging the exception
+            throw ex;  // Consider additional logging here if needed
         } finally {
             em.close();
         }

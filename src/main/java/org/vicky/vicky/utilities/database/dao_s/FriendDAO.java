@@ -1,9 +1,9 @@
 package org.vicky.vicky.utilities.database.dao_s;
 
-import jakarta.persistence.EntityManager;
 import org.vicky.utilities.DatabaseManager.HibernateUtil;
 import org.vicky.vicky.utilities.DBTemplates.FriendPlayer;
 
+import jakarta.persistence.EntityManager;
 import java.util.List;
 import java.util.UUID;
 
@@ -18,9 +18,15 @@ public class FriendDAO {
 
             if (player != null && friend != null) {
                 player.addFriend(friend);
-                em.persist(player);
+                // Use merge for updating an existing managed entity
+                em.merge(player);
             }
             em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            throw e;
         } finally {
             em.close();
         }
@@ -35,9 +41,14 @@ public class FriendDAO {
 
             if (player != null && friend != null) {
                 player.removeFriend(friend);
-                em.persist(player);
+                em.merge(player);
             }
             em.getTransaction().commit();
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            throw e;
         } finally {
             em.close();
         }
@@ -57,8 +68,7 @@ public class FriendDAO {
         EntityManager em = HibernateUtil.getEntityManager();
         try {
             return em.find(FriendPlayer.class, user1Id);
-        }
-        finally {
+        } finally {
             em.close();
         }
     }

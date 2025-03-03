@@ -34,6 +34,7 @@ public final class VickyEsPnA extends JavaPlugin{
             if (utils != null) {
                 sqlManager = utils.getSQLManager();
                 databaseManager = utils.getDatabaseManager();
+                em = utils.getEntityManager();
             }else {
                 throw new RuntimeException("Plugin Vicky Utilities cannot be found on motherboard?");
             }

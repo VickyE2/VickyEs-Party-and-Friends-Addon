@@ -1,6 +1,7 @@
-name: VickyEs-Party_and_Friends_Addon
+name: VickyEs-Party_and_Friends
 version: '0.0.1-MIKA'
 main: org.vicky.vicky.VickyEsPnA
+load: POSTWORLD
 api-version: '1.20'
 prefix: Vs-PnA-A
 authors: [ VickyE2 ]
